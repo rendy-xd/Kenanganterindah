@@ -169,6 +169,26 @@
       height: 150px;
       margin: 10px;
     }
+    
+    /* QRIS Button Style */
+    #qrisButton {
+      position: fixed;
+      bottom: 90px;
+      right: 20px;
+      z-index: 10000;
+      background-color: white;
+      padding: 10px;
+      border-radius: 50%;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    #qrisButton img {
+      width: 28px;
+      height: 28px;
+    }
 </style>
 </head>
 <body>
@@ -225,15 +245,14 @@
 <img alt="Langit" src="https://files.catbox.moe/y2jahw.jpg"/>
 <figcaption>Foto Di Lippo</figcaption>
 </figure>
-   <figure onclick="zoomImage(this)">
+<figure onclick="zoomImage(this)">
 <img alt="Perpisahan" src="https://files.catbox.moe/utqzsk.jpg"/>
 <figcaption>Foto Lagi Main Congklak</figcaption>
-   </figure>
-  
-   <figure onclick="zoomImage(this)">
+</figure>
+<figure onclick="zoomImage(this)">
 <img alt="Perpisahan" src="https://files.catbox.moe/nbqahk.jpg"/>
 <figcaption>Foto Pesantren Kilat</figcaption>
-   </figure>
+</figure>
 <figure>
 <video controls="" width="220">
 <source src="https://files.catbox.moe/kpr8g1.mp4" type="video/mp4"/>
@@ -340,17 +359,44 @@
 </script>
 
 <script>
+  // Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyD5XaN3g4Q6Q4Q6Q4Q6Q4Q6Q4Q6Q4Q6Q4",
+    authDomain: "kenangan-sekolah.firebaseapp.com",
+    databaseURL: "https://kenangan-sekolah.firebaseio.com",
+    projectId: "kenangan-sekolah",
+    storageBucket: "kenangan-sekolah.appspot.com",
+    messagingSenderId: "1234567890",
+    appId: "1:1234567890:web:abcdef1234567890"
+  };
+  
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  const database = firebase.database();
+
   // Fungsi untuk memuat pesan saat halaman dimuat
   function loadMessages() {
-    const messages = JSON.parse(localStorage.getItem('guestbookMessages')) || [];
-    const list = document.getElementById("messageList");
+    // Load from Firebase
+    database.ref('messages').once('value').then((snapshot) => {
+      const messages = snapshot.val() || [];
+      const list = document.getElementById("messageList");
+      list.innerHTML = "";
+      
+      messages.forEach(msg => {
+        const msgBox = document.createElement("div");
+        msgBox.style.marginBottom = "20px";
+        msgBox.style.padding = "10px";
+        msgBox.style.background = "rgba(255,255,255,0.1)";
+        msgBox.style.borderRadius = "8px";
+        msgBox.innerHTML = `<strong>${msg.name}</strong><p>${msg.message}</p>`;
+        list.appendChild(msgBox);
+      });
+    });
     
-    messages.forEach(msg => {
+    // Also load from localStorage as fallback
+    const localMessages = JSON.parse(localStorage.getItem('guestbookMessages')) || [];
+    localMessages.forEach(msg => {
       const msgBox = document.createElement("div");
-      msgBox.style.marginBottom = "20px";
-      msgBox.style.padding = "10px";
-      msgBox.style.background = "rgba(255,255,255,0.1)";
-      msgBox.style.borderRadius = "8px";
       msgBox.innerHTML = `<strong>${msg.name}</strong><p>${msg.message}</p>`;
       list.appendChild(msgBox);
     });
@@ -366,14 +412,17 @@
       return;
     }
 
-    // Ambil pesan yang sudah ada
-    const messages = JSON.parse(localStorage.getItem('guestbookMessages')) || [];
-    
-    // Tambahkan pesan baru
-    messages.unshift({name, message});
-    
-    // Simpan kembali ke localStorage
-    localStorage.setItem('guestbookMessages', JSON.stringify(messages));
+    // Simpan ke Firebase
+    database.ref('messages').once('value').then((snapshot) => {
+      const messages = snapshot.val() || [];
+      messages.unshift({name, message});
+      database.ref('messages').set(messages);
+    });
+
+    // Simpan ke localStorage sebagai fallback
+    const localMessages = JSON.parse(localStorage.getItem('guestbookMessages')) || [];
+    localMessages.unshift({name, message});
+    localStorage.setItem('guestbookMessages', JSON.stringify(localMessages));
 
     // Tampilkan pesan
     const list = document.getElementById("messageList");
@@ -426,7 +475,9 @@
   // Guess Who Game
   const photos = [
     { src: "https://files.catbox.moe/igmh4e.jpg", answer: "Budi" },
-    { src: "https://files.catbox.moe/yq7akp.jpg", answer: "Ani" }
+    { src: "https://files.catbox.moe/yq7akp.jpg", answer: "Ani" },
+    { src: "https://files.catbox.moe/utqzsk.jpg", answer: "Doni" },
+    { src: "https://files.catbox.moe/nbqahk.jpg", answer: "Siti" }
   ];
   let currentPhoto = 0;
 
@@ -477,22 +528,13 @@
 <!-- Include required libraries -->
 <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.4.0/dist/confetti.browser.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
 <!-- Tombol QRIS Mengambang -->
-<a href="https://qris.zone.id/kandi" target="_blank" title="Dukung lewat QRIS" id="qrisButton" style="
-  position: fixed;
-  bottom: 90px;
-  right: 20px;
-  z-index: 10000;
-  background-color: white;
-  padding: 10px;
-  border-radius: 50%;
-  box-shadow: 0 0 10px rgba(0,0,0,0.3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-">
-  <img src="https://files.catbox.moe/ietdwl.jpg" alt="QRIS" style="width: 28px; height: 28px;" />
+<a href="https://qris.zone.id/kandi" target="_blank" title="Dukung lewat QRIS" id="qrisButton">
+  <img src="https://files.catbox.moe/ietdwl.jpg" alt="QRIS" />
 </a>
 
 </body>
-     </html>
+      </html>
