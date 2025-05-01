@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Kenangan Sekolah</title>
+<style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+      color: white;
+      text-align: center;
+      padding: 30px 10px;
+    }
+    h1 {
+      font-size: 3em;
+      margin-bottom: 10px;
+    }
+    .timeline {
+      text-align: left;
+      max-width: 600px;
+      margin: 30px auto;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 20px;
+      border-radius: 10px;
+    }
+    .timeline h3 {
+      margin-bottom: 5px;
+      color: #00e5ff;
+    }
+    .gallery {
+      display: flex;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 10px;
+      gap: 20px;
+      margin-top: 30px;
+    }
+    .gallery figure {
+      scroll-snap-align: start;
+      flex: 0 0 auto;
+      margin: 0;
+      cursor: pointer;
+    }
+    .gallery img {
+      width: 220px;
+      height: 220px;
+      object-fit: cover;
+      border-radius: 10px;
+      transition: transform 0.3s;
+    }
+    .gallery img:hover {
+      transform: scale(1.05);
+    }
+    figcaption {
+      margin-top: 10px;
+      font-size: 1.2em;
+      font-weight: bold;
+    }
+    .quotes {
+      font-style: italic;
+      margin-top: 30px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    footer {
+      margin-top: 50px;
+      font-size: 0.9em;
+      color: #a0c0d0;
+    }
+    /* Modal Zoom */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.9);
+      justify-content: center;
+      align-items: center;
+    }
+    .modal img {
+      max-width: 95%;
+      max-height: 95%;
+      border-radius: 5px;
+      object-fit: contain;
+    }
+
+    #welcome-screen {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background-color: #0f2027;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 99999;
+      text-align: center;
+    }
+    #welcome-screen h2 {
+      font-size: 2em;
+      margin-bottom: 20px;
+      color: white;
+    }
+    #welcome-screen img {
+      width: 220px;
+      border-radius: 0;
+      margin-bottom: 10px;
+      box-shadow: 0 0 25px #00e5ff;
+    }
+    #welcome-screen p {
+      margin-bottom: 20px;
+      color: #c0e0f0;
+    }
+    #welcome-screen button {
+      padding: 12px 24px;
+      background: transparent;
+      border: 2px solid #00c3ff;
+      color: #00c3ff;
+      font-size: 1em;
+      border-radius: 8px;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s;
+      box-shadow: 0 0 10px #00c3ff, 0 0 20px #00c3ff;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 10px #00c3ff, 0 0 20px #00c3ff; }
+      50% { box-shadow: 0 0 15px #00c3ff, 0 0 30px #00c3ff, 0 0 45px #00c3ff; }
+      100% { box-shadow: 0 0 10px #00c3ff, 0 0 20px #00c3ff; }
+    }
+    #welcome-screen button:hover {
+      background: #00c3ff;
+      color: #0f2027;
+      box-shadow: 0 0 15px #00c3ff, 0 0 30px #00c3ff, 0 0 45px #00c3ff;
+      transform: translateY(-2px);
+    }
+    #welcome-screen button:active {
+      transform: translateY(1px);
+    }
+    .typing::after {
+      content: '|';
+      animation: blink 1s infinite;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+    
+    /* Gallery Navigation */
+    .gallery-nav {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin: 20px 0;
+      flex-wrap: wrap;
+    }
+    
+    .gallery-nav button {
+      padding: 10px 20px;
+      background: transparent;
+      color: #00c3ff;
+      border: 2px solid #00c3ff;
+      border-radius: 20px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.3s;
+      text-shadow: 0 0 5px rgba(0, 195, 255, 0.5);
+      box-shadow: 0 0 10px rgba(0, 195, 255, 0.3);
+    }
+    
+    .gallery-nav button:hover {
+      background: rgba(0, 195, 255, 0.2);
+      box-shadow: 0 0 15px #00c3ff, 0 0 25px rgba(0, 195, 255, 0.5);
+      transform: scale(1.05);
+    }
+    
+    .gallery-nav button.active {
+      background: #00c3ff;
+      color: #0f2027;
+      box-shadow: 0 0 15px #00c3ff, 0 0 30px #00c3ff;
+      font-weight: bold;
+    }
+    
+    .gallery-section {
+      display: none;
+      animation: fadeIn 0.5s;
+    }
+    
+    .gallery-section.active {
+      display: block;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    /* Anti-Screenshot Notification */
+    .anti-screenshot-notif {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.9);
+      color: #ff6b6b;
+      padding: 20px;
+      border-radius: 10px;
+      font-size: 1.5em;
+      text-align: center;
+      z-index: 99999;
+      display: none;
+      box-shadow: 0 0 20px #ff6b6b;
+      border: 2px solid #ff6b6b;
+      animation: shake 0.5s;
+      pointer-events: none;
+    }
+    
+    @keyframes shake {
+      0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
+      25% { transform: translate(-50%, -50%) rotate(5deg); }
+      50% { transform: translate(-50%, -50%) rotate(-5deg); }
+      75% { transform: translate(-50%, -50%) rotate(5deg); }
+    }
+    
+    /* Existing feature styles */
+    #timeCapsule, #guessGame, #qrCode {
+      margin: 30px auto;
+      max-width: 600px;
+      background: rgba(255,255,255,0.1);
+      padding: 20px;
+      border-radius: 10px;
+    }
+    
+    #spotifyPlaylist {
+      margin: 40px auto;
+      max-width: 600px;
+    }
+    
+    #gamePhoto {
+      width: 200px;
+      height: 200px;
+      object-fit: cover;
+      border-radius: 10px;
+      margin: 10px auto;
+      display: block;
+    }
+    
+    #qrImage {
+      width: 150px;
+      height: 150px;
+      margin: 10px;
+    }
+    
+    #qrisButton {
+      position: fixed;
+      bottom: 90px;
+      right: 20px;
+      z-index: 10000;
+      background-color: white;
+      padding: 10px;
+      border-radius: 50%;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    #qrisButton img {
+      width: 28px;
+      height: 28px;
+    }
+    
+    #musicBtn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: rgba(255,255,255,0.1);
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: bold;
+      backdrop-filter: blur(5px);
+      z-index: 9999;
+    }
+</style>
+</head>
+<body>
+
+<div id="welcome-screen">
+<h2 class="typing" id="typing-text"></h2>
+<img alt="Pak Guru" src="https://randomuser.me/api/portraits/men/45.jpg"/>
+<p>Pak A. Hidayat, S.Pd</p>
+<button onclick="startWeb()">GO</button>
+</div>
+
+<!-- Anti-Screenshot Notification -->
+<div class="anti-screenshot-notif" id="antiScreenshotNotif">
+  ✋ HAL INI MEMANG LUCU NAMUN KAMU TIDAK BISA SCREENSHOT NYA!
+</div>
+
+<script>
+  const welcomeScreen = document.getElementById('welcome-screen');
+  const typingText = document.getElementById('typing-text');
+  const text = "Apakah kamu ingin mengenang masa Kelas 6A?";
+  let idx = 0;
+
+  function type() {
+    if (idx < text.length) {
+      typingText.innerHTML += text.charAt(idx);
+      idx++;
+      setTimeout(type, 60);
+    }
+  }
+  type();
+
+  function startWeb() {
+    welcomeScreen.style.display = 'none';
+    const bgMusic = document.getElementById('bgMusic');
+    if (bgMusic) bgMusic.play();
+  }
+</script>
+
+<h1>Kenangan Sekolah</h1>
+<p>Masa-masa yang tak terlupakan bersama teman dan guru</p>
+
+<div class="timeline">
+<h3>2019</h3>
+<p>Masuk SD, pertama kali bertemu teman-teman luar biasa.</p>
+<h3>2025</h3>
+<p>Lulus dan acara perpisahan yang mengharukan.</p>
+</div>
+
+<!-- GALLERY NAVIGATION -->
+<div class="gallery-nav">
+  <button class="active" onclick="showGallery('kenangan')">Kenangan Terindah</button>
+  <button onclick="showGallery('lipo')">Foto di Lippo</button>
+  <button onclick="showGallery('batik')">Foto Bukber Bareng</button>
+  <button onclick="showGallery('kegiatan')">Kegiatan Lainnya</button>
+   <button onclick="showGallery('friend')">Best Friend </button>
+</div>
+<div id="friend-gallery" class="gallery-section active">
+<h2>Best Friend</h2>
+<div class="gallery">
+ <figure onclick="zoomImage(this)">
+      <img src="https://files.catbox.moe/8uat6g.jpg" alt="Bukber">
+      <figcaption>Best Friend</figcaption>
+    </figure>
+ <figure onclick="zoomImage(this)">
+      <img src="https://files.catbox.moe/64nqms.jpg" alt="Bukber">
+      <figcaption>Best Friend</figcaption>
+    </figure>
+ </div>
+</div>
+<!-- KENANGAN TERINDAH GALLERY -->
+<div id="kenangan-gallery" class="gallery-section active">
+  <h2>Kenangan Terindah</h2>
+  <div class="gallery">
+ <figure onclick="zoomImage(this)">
+      <img src="https://files.catbox.moe/3klnuk.jpg" alt="Bukber">
+      <figcaption>Tertawa di bangku belakang itu priceless.</figcaption>
+    </figure>
+     <figure onclick="zoomImage(this)">
+      <img src="https://files.catbox.moe/os9fop.jpg" alt="Bukber">
+      <figcaption>17 Agustus 2024</figcaption>
+    </figure>
+    <figure onclick="zoomImage(this)">
+      <img src="https://files.catbox.moe/igmh4e.jpg" alt="Congklak">
+      <figcaption>Hari Batik Nasional</figcaption>
+    </figure>
+    <figure onclick="zoomImage(this)">
+      <img src="https://files.catbox.moe/nbqahk.jpg" alt="Pesantren">
+      <figcaption>Pesantren Kilat</figcaption>
+    </figure>
+    <figure>
+      <video controls width="220">
+        <source src="https://files.catbox.moe/kpr8g1.mp4" type="video/mp4">
+        Browser tidak mendukung video.
+      </video>
+      <figcaption>Video Kenangan</figcaption>
+    </figure>
+  </div>
+</div>
+
+<!-- LIPPO GALLERY -->
+<div id="lipo-gallery" class="gallery-section">
+  <h2>Foto di Lippo</h2>
+  <div class="gallery">
+  <figure onclick="zoomImage(this)">
+      <img src="https://files.catbox.moe/0rwp8g.jpg" alt="Bukber">
+      <figcaption>Bukber Bareng</figcaption>
+    </figure>
+<figure onclick="zoomImage(this)">
+      <img src="https://files.catbox.moe/ln2r22.jpg" alt="Bukber">
+      <figcaption>Kunjuangn Ke Lippo</figcaption>
+    </figure>
+    <figure onclick="zoomImage(this)">
+      <img src="https://files.catbox.moe/y2jahw.jpg" alt="Lippo">
+      <figcaption>Kunjungan ke Lippo</figcaption>
+    </figure>
+  </div>
+</div>
+
+<!-- BATIK GALLERY -->
+<div id="batik-gallery" class="gallery-section">
+  <h2>Foto Bukber Bareng</h2>
+  <div class="gallery">
+ <figure onclick="zoomImage(this)">
+      <img src="https://files.catbox.moe/c8hrwn.jpg" alt="Bukber">
+      <figcaption>Bukber Bareng</figcaption>
+    </figure>
+ <figure onclick="zoomImage(this)">
+      <img src="https://files.catbox.moe/gmtkca.jpg" alt="Bukber">
+      <figcaption>Bukber Bareng</figcaption>
+    </figure>
+  <figure onclick="zoomImage(this)">
+      <img src="https://files.catbox.moe/yq7akp.jpg" alt="Bukber">
+      <figcaption>Bukber Bareng</figcaption>
+    </figure>
+  </div>
+</div>
+
+<!-- KEGIATAN LAINNYA GALLERY -->
+<div id="kegiatan-gallery" class="gallery-section">
+  <h2>Hal Yang Lucu</h2>
+  <div class="gallery">
+ <figure onclick="zoomImage(this)">
+      <img src="https://files.catbox.moe/o00imz.jpg" alt="Bukber">
+      <figcaption>Aib Orang</figcaption>
+    </figure>
+ <figure onclick="zoomImage(this)">
+      <img src="https://files.catbox.moe/fzxjkh.jpg" alt="Bukber">
+      <figcaption>Aib Orang</figcaption>
+    </figure>
+ <figure onclick="zoomImage(this)">
+      <img src="https://files.catbox.moe/fqp1ts.jpg" alt="Bukber">
+      <figcaption>Aib Orang</figcaption>
+    </figure>
+ <figure onclick="zoomImage(this)">
+      <img src="https://files.catbox.moe/t8ehkw.jpg" alt="Bukber">
+      <figcaption>Aib Orang</figcaption>
+    </figure>
+    <figure onclick="zoomImage(this)">
+      <img src="https://files.catbox.moe/v5eoy0.jpg" alt="Congklak">
+      <figcaption>Aib Orang</figcaption>
+    </figure>
+  </div>
+</div>
+
+<!-- GUESTBOOK SECTION -->
+<div id="guestbook" style="margin-top: 40px; max-width: 600px; margin-left: auto; margin-right: auto;">
+  <h2>Buku Kenangan</h2>
+  <p>Tulis pesan untuk teman-teman atau gurumu:</p>
+  <input type="text" id="guestName" placeholder="Nama Kamu" style="padding: 10px; width: 90%; margin-bottom: 10px; border-radius: 8px; border: none;"><br>
+  <textarea id="guestMessage" placeholder="Pesan kenangan..." rows="4" style="padding: 10px; width: 90%; border-radius: 8px; border: none;"></textarea><br>
+  <button onclick="addMessage()" style="margin-top: 10px; padding: 10px 20px; border: none; border-radius: 8px; background-color: #00c3ff; color: white; cursor: pointer;">Kirim</button>
+  <div id="messageList" style="margin-top: 30px; text-align: left;"></div>
+</div>
+
+<!-- OTHER FEATURES -->
+<div id="timeCapsule">
+  <h3>🕰️ Time Capsule</h3>
+  <p>Tulis pesan untuk masa depan:</p>
+  <input type="date" id="capsuleDate" style="padding: 10px; width: 90%; margin-bottom: 10px; border-radius: 8px; border: none;">
+  <textarea id="capsuleMessage" placeholder="Apa yang ingin kamu sampaikan ke diri sendiri/teman di masa depan?" rows="3" style="padding: 10px; width: 90%; border-radius: 8px; border: none;"></textarea>
+  <button onclick="saveTimeCapsule()" style="margin-top: 10px; padding: 10px 20px; background: #00c3ff; color: white; border: none; border-radius: 8px; cursor: pointer;">Simpan</button>
+</div>
+
+<div id="guessGame">
+  <h3>🎮 Guess Who?</h3>
+  <p>Tebak siapa ini berdasarkan foto masa kecil!</p>
+  <img id="gamePhoto" src="" style="width: 200px; height: 200px; object-fit: cover; border-radius: 10px; margin: 10px auto; display: block;">
+  <input type="text" id="guessInput" placeholder="Nama temanmu..." style="padding: 8px; width: 80%; margin: 10px 0; border-radius: 5px; border: none;">
+  <button onclick="checkGuess()" style="padding: 8px 15px; background: #ff6b6b; color: white; border: none; border-radius: 5px; cursor: pointer;">Submit</button>
+  <p id="gameResult" style="font-weight: bold; margin-top: 10px;"></p>
+</div>
+
+<div id="spotifyPlaylist">
+  <h3>🎵 Lagu Hits Angkatan Kita</h3>
+  <iframe src="https://open.spotify.com/embed/playlist/37i9dQZF1DXcBWIGoYBM5M" width="100%" height="380" frameborder="0" allowtransparency="true" allow="encrypted-media" style="border-radius: 12px;"></iframe>
+</div>
+
+<div id="qrCode">
+  <h3>📱 Scan QR Ini untuk Share Kenangan!</h3>
+  <div id="qrImage" style="width: 150px; height: 150px; margin: 10px auto;"></div>
+  <button onclick="generateQR()" style="padding: 8px 15px; background: #00c3ff; color: white; border: none; border-radius: 5px; cursor: pointer;">Generate QR</button>
+</div>
+
+<div class="modal" id="imageModal" onclick="this.style.display='none'">
+<img alt="Zoomed Image" id="modalImage" src=""/>
+</div>
+
+<footer>
+    Dibuat dengan kenangan oleh Kamu - Class of 2019
+</footer>
+
+<script>
+    function zoomImage(element) {
+      var src = element.querySelector('img').src;
+      var modal = document.getElementById('imageModal');
+      var modalImg = document.getElementById('modalImage');
+      modalImg.src = src;
+      modal.style.display = "flex";
+    }
+
+    // Gallery navigation function
+    function showGallery(galleryId) {
+      // Hide all galleries
+      document.querySelectorAll('.gallery-section').forEach(section => {
+        section.classList.remove('active');
+      });
+      
+      // Show selected gallery
+      document.getElementById(`${galleryId}-gallery`).classList.add('active');
+      
+      // Update active button
+      document.querySelectorAll('.gallery-nav button').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      event.target.classList.add('active');
+      
+      // Special effect for "Kegiatan Lainnya"
+      if (galleryId === 'kegiatan') {
+        showAntiScreenshotAlert();
+      }
+    }
+    
+    // Anti-screenshot functionality
+    let isShowingAlert = false;
+    
+    function showAntiScreenshotAlert() {
+      if (isShowingAlert) return;
+      
+      isShowingAlert = true;
+      const notif = document.getElementById('antiScreenshotNotif');
+      notif.style.display = 'block';
+      document.body.classList.add('anti-screenshot-mode');
+      
+      setTimeout(() => {
+        notif.style.display = 'none';
+        document.body.classList.remove('anti-screenshot-mode');
+        isShowingAlert = false;
+      }, 3000);
+    }
+    
+    // Block screenshot attempts
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey && e.key === 's') || 
+          (e.key === 'PrintScreen') ||
+          (e.metaKey && e.key === 's')) {
+        e.preventDefault();
+        showAntiScreenshotAlert();
+      }
+    });
+    
+    // Block right-click
+    document.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      showAntiScreenshotAlert();
+    });
+    
+    // Detect DevTools opening
+    let devToolsOpened = false;
+    setInterval(() => {
+      if (window.outerWidth - window.innerWidth > 100 || 
+          window.outerHeight - window.innerHeight > 100) {
+        if (!devToolsOpened) {
+          showAntiScreenshotAlert();
+          devToolsOpened = true;
+        }
+      } else {
+        devToolsOpened = false;
+      }
+    }, 500);
+</script>
+
+<!-- Musik Sedih + Tombol -->
+<audio id="bgMusic" loop="" src="https://files.catbox.moe/m051mg.mp3"></audio>
+<button id="musicBtn" onclick="toggleMusic()">Play Musik</button>
+
+<script>
+  const music = document.getElementById("bgMusic");
+  const btn = document.getElementById("musicBtn");
+
+  function toggleMusic() {
+    if (music.paused) {
+      music.play();
+      btn.textContent = "Pause Musik";
+    } else {
+      music.pause();
+      btn.textContent = "Play Musik";
+    }
+  }
+</script>
+
+<script>
+  // Fungsi untuk memuat pesan saat halaman dimuat
+  function loadMessages() {
+    const messages = JSON.parse(localStorage.getItem('guestbookMessages')) || [];
+    const list = document.getElementById("messageList");
+    
+    messages.forEach(msg => {
+      const msgBox = document.createElement("div");
+      msgBox.style.marginBottom = "20px";
+      msgBox.style.padding = "10px";
+      msgBox.style.background = "rgba(255,255,255,0.1)";
+      msgBox.style.borderRadius = "8px";
+      msgBox.innerHTML = `<strong>${msg.name}</strong><p>${msg.message}</p>`;
+      list.appendChild(msgBox);
+    });
+  }
+
+  // Fungsi untuk menambahkan pesan baru
+  function addMessage() {
+    const name = document.getElementById("guestName").value.trim();
+    const message = document.getElementById("guestMessage").value.trim();
+    
+    if (!name || !message) {
+      alert("Isi nama dan pesan dulu ya!");
+      return;
+    }
+
+    const messages = JSON.parse(localStorage.getItem('guestbookMessages')) || [];
+    messages.unshift({name, message});
+    localStorage.setItem('guestbookMessages', JSON.stringify(messages));
+
+    const list = document.getElementById("messageList");
+    const msgBox = document.createElement("div");
+    msgBox.style.marginBottom = "20px";
+    msgBox.style.padding = "10px";
+    msgBox.style.background = "rgba(255,255,255,0.1)";
+    msgBox.style.borderRadius = "8px";
+    msgBox.innerHTML = `<strong>${name}</strong><p>${message}</p>`;
+    list.prepend(msgBox);
+
+    document.getElementById("guestName").value = "";
+    document.getElementById("guestMessage").value = "";
+  }
+
+  // Time Capsule Functionality
+  function saveTimeCapsule() {
+    const date = document.getElementById("capsuleDate").value;
+    const message = document.getElementById("capsuleMessage").value;
+    
+    if (!date || !message) {
+      alert("Isi tanggal dan pesan dulu!");
+      return;
+    }
+
+    const capsules = JSON.parse(localStorage.getItem('timeCapsules')) || [];
+    capsules.push({ date, message });
+    localStorage.setItem('timeCapsules', JSON.stringify(capsules));
+    
+    alert(`Pesan disimpan! Akan terbuka pada ${new Date(date).toLocaleDateString()}.`);
+    document.getElementById("capsuleMessage").value = "";
+  }
+
+  function checkCapsules() {
+    const capsules = JSON.parse(localStorage.getItem('timeCapsules')) || [];
+    const today = new Date().toISOString().split('T')[0];
+    
+    capsules.forEach((capsule, index) => {
+      if (capsule.date <= today) {
+        alert(`📜 Pesan Time Capsule:\n\n${capsule.message}`);
+        capsules.splice(index, 1);
+        localStorage.setItem('timeCapsules', JSON.stringify(capsules));
+      }
+    });
+  }
+
+  // Guess Who Game
+  const photos = [
+    { src: "https://files.catbox.moe/igmh4e.jpg", answer: "Budi" },
+    { src: "https://files.catbox.moe/yq7akp.jpg", answer: "Ani" }
+  ];
+  let currentPhoto = 0;
+
+  function loadGame() {
+    document.getElementById("gamePhoto").src = photos[currentPhoto].src;
+  }
+
+  function checkGuess() {
+    const guess = document.getElementById("guessInput").value.trim();
+    const answer = photos[currentPhoto].answer;
+    const result = document.getElementById("gameResult");
+    
+    if (guess.toLowerCase() === answer.toLowerCase()) {
+      result.textContent = "Benar! Ini foto " + answer + " waktu kecil!";
+      result.style.color = "#00ff88";
+      currentPhoto = (currentPhoto + 1) % photos.length;
+      setTimeout(() => {
+        loadGame();
+        document.getElementById("guessInput").value = "";
+        result.textContent = "";
+      }, 1500);
+    } else {
+      result.textContent = "Salah! Coba lagi...";
+      result.style.color = "#ff6b6b";
+    }
+  }
+
+  // QR Code Generator
+  function generateQR() {
+    const qrDiv = document.getElementById("qrImage");
+    qrDiv.innerHTML = "";
+    const qr = new QRCode(qrDiv, {
+      text: window.location.href,
+      width: 150,
+      height: 150
+    });
+  }
+
+  // Panggil fungsi saat halaman dimuat
+  window.onload = function() {
+    loadMessages();
+    loadGame();
+    checkCapsules();
+    showGallery('kenangan'); // Show kenangan gallery by default
+  };
+</script>
+
+<!-- Include required libraries -->
+<script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.4.0/dist/confetti.browser.min.js"></script>
+
+<!-- Tombol QRIS Mengambang -->
+<a href="https://qris.zone.id/kandi" target="_blank" title="Dukung lewat QRIS" id="qrisButton">
+  <img src="https://files.catbox.moe/ietdwl.jpg" alt="QRIS" />
+</a>
+
+
+</body>
+</html>RIS" />
+</a>
+
+
+
+
+</body>
+</html></body>
+</html>ti@1.4.0/dist/confetti.browser.min.js"></script>
+
+<!-- Tombol QRIS Mengambang -->
+<a href="https://qris.zone.id/kandi" target="_blank" title="Dukung lewat QRIS" id="qrisButton">
+  <img src="https://files.catbox.moe/ietdwl.jpg" alt="QRIS" />
+</a>
+
+</body>
+</html>
